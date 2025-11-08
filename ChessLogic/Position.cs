@@ -47,7 +47,6 @@ namespace ChessLogic
             return HashCode.Combine(Row, Column);
         }
 
-        // 
         public static bool operator ==(Position left, Position right)
         {
             return EqualityComparer<Position>.Default.Equals(left, right);
@@ -61,7 +60,7 @@ namespace ChessLogic
         // Returns one Position by adding one value of the Direction 
         public static Position operator +(Position pos, Direction dir)
         {
-            return new Position(pos.Row + dir.RowDelta, pos.Column + dir.ColumnDelta)
+            return new Position(pos.Row + dir.RowDelta, pos.Column + dir.ColumnDelta);
         }
     }
 }
