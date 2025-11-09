@@ -80,10 +80,13 @@ namespace ChessLogic
 
                 if(CanCaptureAt(toPos, board))
                 {
-                    // 
+                    yield return new NormalMove(fromPos, toPos);
                 }
             }
         }
-
+        public override IEnumerable<Move> GetMoves(Position fromPos, Board board)
+        {
+            return ForwardMoves(fromPos, board).Concat(DiagonalMoves(fromPos, board));
+        } 
     }
 }
