@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChessLogic
 {
-    // With this class will UI interact with 
+    // With this class will UI interact 
     public class GameState
     {
         public Board Board { get; }
