@@ -30,7 +30,7 @@ namespace ChessLogic
 
         }
 
-        public void makeMove(Move move)
+        public void MakeMove(Move move)
         {
             move.Execute(Board);
             CurrentPlayer = CurrentPlayer.Opponent();
