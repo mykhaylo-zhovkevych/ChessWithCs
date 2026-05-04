@@ -19,7 +19,7 @@ namespace ChessLogic
             Row = row;
             Column = column;
         }
-        // It return Player because Player has specifi color value
+        // It return Player because Player has specific color value
         public Player SquareColor()
         {
             // If is even
@@ -34,7 +34,6 @@ namespace ChessLogic
         }
 
 
-        // For creating internal method. Use `ctrl + .`
         public override bool Equals(object obj)
         {
             return obj is Position position &&

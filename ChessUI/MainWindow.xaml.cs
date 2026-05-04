@@ -8,9 +8,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using CheessUI;
 using ChessLogic;
 
-namespace CheessUI
+namespace ChessUI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -43,6 +44,7 @@ namespace CheessUI
                     pieceImages[r, c] = image;
                     PieceGrid.Children.Add(image);
 
+                    // Create highlight rectangles and add them to the grid
                     Rectangle highlight = new Rectangle();
                     highlights[r, c] = highlight;
                     HighlightGrid.Children.Add(highlight);
@@ -110,6 +112,7 @@ namespace CheessUI
             SetCursor(gameState.CurrentPlayer);
         }
 
+        // Convert mouse click position to board square position
         private Position ToSquarePosition(Point point)
         {
             double squareSize = BoardGrid.ActualWidth / 8;
