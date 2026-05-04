@@ -79,7 +79,6 @@ namespace ChessUI
             {
                 OnToPositionSelected(pos);
             }
-
         }
 
 
@@ -124,7 +123,6 @@ namespace ChessUI
         private void CacheMoves(IEnumerable<Move> moves)
         {
             moveCache.Clear();
-
             foreach (Move move in moves)
             {
                 moveCache[move.ToPos] = move;

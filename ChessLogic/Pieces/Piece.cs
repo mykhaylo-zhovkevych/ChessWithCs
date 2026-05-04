@@ -13,12 +13,11 @@ namespace ChessLogic
         public bool HasMoved { get; set; } = false;
 
         public abstract Piece Copy();
-
         public abstract IEnumerable<Move> GetMoves(Position fromPos, Board board);
 
         protected IEnumerable<Position> MovePositionsInDir(Position fromPos, Board board, Direction dir)
         {
-            // If the position inside of the board continue untill the end of the board
+            // 3 cases - empty square, opponent piece, own piece
             for (Position pos = fromPos + dir; Board.IsInside(pos); pos += dir)
             {
                 if(board.IsEmpty(pos))
@@ -44,6 +43,13 @@ namespace ChessLogic
         {
             return dirs.SelectMany(dir => MovePositionsInDir(fromPos, board, dir));
         }
-
+        public virtual bool CanCaptureOpponentKing(Position from, Board baord)
+        {
+            return GetMoves(from, baord).Any(move =>
+            {
+                Piece piece = baord[move.ToPos];
+                return piece != null && piece.Type == PieceType.King;
+            });
+        }
     }
 }
