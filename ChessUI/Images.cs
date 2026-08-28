@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ChessLogic;
+using ChessLogic.Enum;
 
-namespace CheessUI
+namespace ChessUI
 {
     public static class Images
     {

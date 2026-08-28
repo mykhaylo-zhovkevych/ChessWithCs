@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChessLogic.Enum;
 
 namespace ChessLogic
 {
@@ -22,7 +23,6 @@ namespace ChessLogic
         // It return Player because Player has specific color value
         public Player SquareColor()
         {
-            // If is even
             if ((Row + Column) % 2 == 0)
             {
                 return Player.White;

@@ -1,15 +1,10 @@
-﻿using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-using CheessUI;
 using ChessLogic;
+using ChessLogic.Enum;
 
 namespace ChessUI
 {
@@ -66,6 +61,10 @@ namespace ChessUI
 
         private void BoardGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (gameState.IsGameOver())
+            {
+                return;
+            }
 
             Point point = e.GetPosition(BoardGrid);
             // Helper method to convert point to Position
@@ -107,6 +106,40 @@ namespace ChessUI
         private void HandleMove(Move move)
         {
             gameState.MakeMove(move);
+            DrawBoard(gameState.Board);
+            SetCursor(gameState.CurrentPlayer);
+
+            if (gameState.IsGameOver())
+            {
+                ShowGameOver();
+            }
+        }
+
+        private void ShowGameOver()
+        {
+            GameOverMenu gameOverMenu = new GameOverMenu(gameState);
+            MenuContainer.Content = gameOverMenu;
+
+            gameOverMenu.OptionSelected += option =>
+            {
+                if (option == Option.Exit)
+                {
+                    Application.Current.Shutdown();
+                }
+                else
+                {
+                    MenuContainer.Content = null;
+                    RestartGame();
+                }
+            };
+        }
+
+        private void RestartGame()
+        {
+            selectedPos = null;
+            HideHighlights();
+            moveCache.Clear();
+            gameState = new GameState(Player.White, Board.Initial());
             DrawBoard(gameState.Board);
             SetCursor(gameState.CurrentPlayer);
         }

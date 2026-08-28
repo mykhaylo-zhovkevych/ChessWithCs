@@ -1,3 +1,5 @@
+using ChessLogic.Enum;
+
 namespace ChessLogic
 {
     public class Result

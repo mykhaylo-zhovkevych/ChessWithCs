@@ -4,15 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessLogic
+namespace ChessLogic.Enum
 {
-    public enum PieceType
+    public enum Player
     {
-        Pawn,
-        Bishop,
-        Knight,
-        Rook,
-        Queen,
-        King
+        None,
+        White,
+        Black
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChessLogic.Enum;
 
 namespace ChessLogic
 {
@@ -65,9 +66,9 @@ namespace ChessLogic
             }
         }
 
-        //public bool IsGameOver()
-        //{
-        //    return Result != null;
-        //}
+        public bool IsGameOver()
+        {
+            return Result != null;
+        }
     }
 }
