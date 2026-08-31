@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChessLogic.Enum;
+using ChessLogic.Moves;
 
 // Namespaces and internal folders are independent
 // This mean that Pawn is in the main folder and not in Pieces folder
@@ -55,14 +56,33 @@ namespace ChessLogic
 
         }
 
+        // Promotion moves would be returned in the body
+        private static IEnumerable<Move> PromotionMoves(Position from, Position to)
+        {
+            yield return new PawnPromotion(from, to, PieceType.Knight);
+            yield return new PawnPromotion(from, to, PieceType.Bishop);
+            yield return new PawnPromotion(from, to, PieceType.Rook);
+            yield return new PawnPromotion(from, to, PieceType.Queen);
+        }
 
+        // claude --resume 536bd6f9-88f6-412d-b771-d9e2bf10354f
         private IEnumerable<Move> ForwardMoves(Position fromPos, Board board)
         {
             Position oneMovePos = fromPos + forward;
 
             if (CanMoveTo(oneMovePos, board))
             {
-                yield return new NormalMove(fromPos, oneMovePos);
+                if (oneMovePos.Row == 0 || oneMovePos.Row == 7)
+                {
+                    foreach (Move promotionMoves in PromotionMoves(fromPos, oneMovePos))
+                    {
+                        yield return promotionMoves;
+                    }
+                }
+                else
+                {
+                    yield return new NormalMove(fromPos, oneMovePos);
+                }
 
                 Position twoMovePos = oneMovePos + forward;
 
@@ -70,6 +90,7 @@ namespace ChessLogic
                 {
                     yield return new NormalMove(fromPos, twoMovePos);
                 }
+
             }
         }
 
@@ -79,12 +100,23 @@ namespace ChessLogic
             {
                 Position toPos = fromPos + forward + dir;
 
-                if(CanCaptureAt(toPos, board))
+                if (CanCaptureAt(toPos, board))
                 {
-                    yield return new NormalMove(fromPos, toPos);
+                   if (toPos.Row == 0 || toPos.Row == 7)
+                   {
+                       foreach (Move promotionMoves in PromotionMoves(fromPos, toPos))
+                       {
+                           yield return promotionMoves;
+                       }
+                   }
+                   else
+                   {
+                       yield return new NormalMove(fromPos, toPos);
+                   }
                 }
             }
         }
+
         public override IEnumerable<Move> GetMoves(Position fromPos, Board board)
         {
             return ForwardMoves(fromPos, board).Concat(DiagonalMoves(fromPos, board));

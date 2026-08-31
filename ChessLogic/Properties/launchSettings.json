@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ChessLogic": {
+      "commandName": "Project",
+      "remoteDebugEnabled": true,
+      "debugEngines": "managed"
+    }
+  }
+}

@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using ChessLogic;
 using ChessLogic.Enum;
+using ChessLogic.Moves;
 
 namespace ChessUI
 {
@@ -99,7 +100,14 @@ namespace ChessUI
 
             if (moveCache.TryGetValue(pos, out Move move))
             {
-                HandleMove(move);
+                if (move.Type == MoveType.PawnPromotion)
+                {
+                    HandlePromotion(move.FromPos, move.ToPos);
+                }
+                else
+                {
+                    HandleMove(move);
+                }
             }
         }
 
@@ -113,6 +121,23 @@ namespace ChessUI
             {
                 ShowGameOver();
             }
+        }
+
+        private void HandlePromotion(Position fromPos, Position toPos)
+        {
+            // Important: In a real application, you would show a promotion dialog to the user to select the piece type.
+            pieceImages[fromPos.Row, fromPos.Column].Source = Images.GetImage(gameState.CurrentPlayer, PieceType.Pawn);
+            pieceImages[fromPos.Row, fromPos.Column].Source = null;
+
+            PromotionMenu promMenu = new PromotionMenu(gameState.CurrentPlayer);
+            MenuContainer.Content = promMenu;
+
+            promMenu.PieceSelected += type =>
+            {
+                MenuContainer.Content = null;
+                Move promotionMove = new PawnPromotion(fromPos, toPos, type);
+                HandleMove(promotionMove);
+            };
         }
 
         private void ShowGameOver()
