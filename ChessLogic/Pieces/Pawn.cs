@@ -65,7 +65,6 @@ namespace ChessLogic
             yield return new PawnPromotion(from, to, PieceType.Queen);
         }
 
-        // claude --resume 536bd6f9-88f6-412d-b771-d9e2bf10354f
         private IEnumerable<Move> ForwardMoves(Position fromPos, Board board)
         {
             Position oneMovePos = fromPos + forward;
@@ -88,9 +87,8 @@ namespace ChessLogic
 
                 if (!HasMoved && CanMoveTo(twoMovePos, board))
                 {
-                    yield return new NormalMove(fromPos, twoMovePos);
+                    yield return new PawnDoubleStep(fromPos, twoMovePos);
                 }
-
             }
         }
 
@@ -100,7 +98,12 @@ namespace ChessLogic
             {
                 Position toPos = fromPos + forward + dir;
 
-                if (CanCaptureAt(toPos, board))
+                if (toPos == board.GetPawnSkipPosition(Color.Opponent()))
+                {
+                    yield return new EnPassantMove(fromPos, toPos);
+                }
+
+                else if (CanCaptureAt(toPos, board))
                 {
                    if (toPos.Row == 0 || toPos.Row == 7)
                    {

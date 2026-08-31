@@ -11,6 +11,12 @@ namespace ChessLogic
     {
 
         private readonly Piece[,] pieces = new Piece[8, 8];
+        // TODO: are nowday dict sill need those seter and getter or it because of the individual logic
+        private readonly Dictionary<Player, Position> pawnSkipPosition = new Dictionary<Player, Position>
+        {
+            { Player.Black, null},
+            { Player.White, null}
+        };
 
         // Indexer to access pieces on the board
         // Make simpler setting and getting pieces
@@ -55,7 +61,7 @@ namespace ChessLogic
             this[7, 7] = new Rook(Player.White);
 
 
-            for(int c = 0; c < 8; c++)
+            for (int c = 0; c < 8; c++)
             {
                 this[1, c] = new Pawn(Player.Black);
                 this[6, c] = new Pawn(Player.White);
@@ -67,6 +73,16 @@ namespace ChessLogic
         public static bool IsInside(Position pos)
         {
             return pos.Row >= 0 && pos.Row < 8 && pos.Column >= 0 && pos.Column < 8;
+        }
+
+        public Position GetPawnSkipPosition(Player player)
+        {
+            return pawnSkipPosition[player];
+        }
+
+        public void SetPawnSkipPosition(Player player, Position position)
+        {
+            pawnSkipPosition[player] = position;
         }
 
         public bool IsEmpty(Position pos)

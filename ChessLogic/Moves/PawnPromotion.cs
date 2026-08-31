@@ -1,6 +1,6 @@
 ﻿using ChessLogic.Enum;
 
-namespace ChessLogic.Moves
+namespace ChessLogic
 {
     // is he trying to recreate some pattern with this deligation of the methods? 
     public class PawnPromotion : Move

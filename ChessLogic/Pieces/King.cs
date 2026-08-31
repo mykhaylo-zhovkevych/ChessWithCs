@@ -105,12 +105,12 @@ namespace ChessLogic
 
             if (CanCastleKingSide(fromPos, board))
             {
-                yield return new Castle(MoveType.CastleKS, fromPos);
+                yield return new CastleMove(MoveType.CastleKS, fromPos);
             }
 
             if (CanCastleQueenSide(fromPos, board))
             {
-                yield return new Castle(MoveType.CastleQS, fromPos);
+                yield return new CastleMove(MoveType.CastleQS, fromPos);
             }
         }
 

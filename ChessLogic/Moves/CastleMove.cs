@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChessLogic.Enum;
 
-namespace ChessLogic.Moves
+namespace ChessLogic
 {
     public class CastleMove : Move
     {
