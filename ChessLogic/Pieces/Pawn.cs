@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChessLogic.Enum;
-using ChessLogic.Moves;
+using ChessLogic;
 
 // Namespaces and internal folders are independent
 // This mean that Pawn is in the main folder and not in Pieces folder

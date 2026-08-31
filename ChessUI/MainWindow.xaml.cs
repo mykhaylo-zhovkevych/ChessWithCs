@@ -5,7 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using ChessLogic;
 using ChessLogic.Enum;
-using ChessLogic.Moves;
+using ChessLogic;
 
 namespace ChessUI
 {
@@ -62,7 +62,7 @@ namespace ChessUI
 
         private void BoardGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (gameState.IsGameOver())
+            if (IsMenuOnScreen())
             {
                 return;
             }
@@ -215,6 +215,35 @@ namespace ChessUI
             {
                 Cursor = ChessCursors.BlackCursor;
             }
+        }
+
+        private bool IsMenuOnScreen()
+        {
+            return MenuContainer.Content != null;
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!IsMenuOnScreen() && e.Key == Key.Escape)
+            {
+                ShowPauseMenu();
+            }
+        }
+
+        private void ShowPauseMenu()
+        {
+            PauseMenu pauseMenu = new PauseMenu();
+            MenuContainer.Content = pauseMenu;
+
+            pauseMenu.OptionSelected += option =>
+            {
+                MenuContainer.Content = null;
+
+                if (option == Option.Restart)
+                {
+                    RestartGame();
+                }
+            };
         }
     }
 }
