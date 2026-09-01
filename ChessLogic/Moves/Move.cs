@@ -13,7 +13,7 @@ namespace ChessLogic
         public abstract Position FromPos { get; }
         public abstract Position ToPos { get; }
         // This is command pattern
-        public abstract void Execute(Board board);
+        public abstract bool Execute(Board board);
 
         public virtual bool IsLegal(Board board)
         {

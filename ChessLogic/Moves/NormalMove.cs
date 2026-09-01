@@ -20,12 +20,14 @@ namespace ChessLogic
         }
 
         // Take a piece from FromPos and put it to ToPos
-        public override void Execute(Board board)
+        public override bool Execute(Board board)
         {
             Piece piece = board[FromPos];
-            board[ToPos] = piece;
-            board[FromPos] = null;
-            piece.HasMoved = true;
+            bool capture = !board.IsEmpty(ToPos);
+                board[ToPos] = piece;
+                board[FromPos] = null;
+                piece.HasMoved = true;
+            return capture || piece.Type == PieceType.Pawn;
         }
 
     }

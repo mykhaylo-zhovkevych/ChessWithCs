@@ -13,6 +13,7 @@ namespace ChessLogic
         public Board Board { get; }
         public Player CurrentPlayer { get; private set; }
         public Result Result { get; private set; } = null;
+        private int noCaptureOrPawnMoveCount = 0;
 
         public GameState(Player player, Board board)
         {
@@ -37,7 +38,11 @@ namespace ChessLogic
         public void MakeMove(Move move)
         {
             Board.SetPawnSkipPosition(CurrentPlayer, null);
-            move.Execute(Board);
+            bool isCaptureOrPawnMove = move.Execute(Board);
+            if (isCaptureOrPawnMove)
+                noCaptureOrPawnMoveCount = 0;
+            else
+                noCaptureOrPawnMoveCount++;
             CurrentPlayer = CurrentPlayer.Opponent();
             CheckForGameOver();
         }
@@ -70,11 +75,22 @@ namespace ChessLogic
             {
                 Result = Result.Draw(EndReason.InsufficientMaterial);
             }
+            else if (FiftyMoveRule())
+            {
+                Result = Result.Draw(EndReason.FiftyMoveRule);
+            }
         }
 
         public bool IsGameOver()
         {
             return Result != null;
+        }
+
+        private bool FiftyMoveRule()
+        {
+            // because of each player
+            int fullMoves = noCaptureOrPawnMoveCount / 2;
+            return fullMoves >= 50;
         }
     }
 }

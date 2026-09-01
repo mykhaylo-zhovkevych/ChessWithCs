@@ -28,7 +28,7 @@ namespace ChessLogic
                 _ => new Queen(playerColor)
             };
         }
-        public override void Execute(Board board)
+        public override bool Execute(Board board)
         {
             // Getting the pawn
             Piece pawn = board[FromPos];
@@ -37,6 +37,7 @@ namespace ChessLogic
             Piece promotionPiece = CreatePromotionPiece(pawn.Color);
             promotionPiece.HasMoved = true; // Mark the new piece as having moved
             board[ToPos] = promotionPiece;
+            return true;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace ChessLogic
 
         protected IEnumerable<Position> MovePositionsInDir(Position fromPos, Board board, Direction dir)
         {
-            // 3 cases - empty square, opponent piece, own piece
+            // for each direction, keep moving until we hit the edge of the board or a piece
             for (Position pos = fromPos + dir; Board.IsInside(pos); pos += dir)
             {
                 if(board.IsEmpty(pos))
@@ -40,6 +40,7 @@ namespace ChessLogic
        
         }
         // Creates lazy sequence of positions in multiple directions
+        // Third function call
         protected IEnumerable<Position> MovePositionsInDirs(Position fromPos, Board board, Direction[] dirs)
         {
             return dirs.SelectMany(dir => MovePositionsInDir(fromPos, board, dir));
