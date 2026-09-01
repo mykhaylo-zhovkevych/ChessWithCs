@@ -5,7 +5,6 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using ChessLogic;
 using ChessLogic.Enum;
-using ChessLogic;
 
 namespace ChessUI
 {

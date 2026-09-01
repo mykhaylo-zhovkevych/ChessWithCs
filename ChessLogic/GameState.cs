@@ -20,6 +20,7 @@ namespace ChessLogic
             Board = board;
         }
 
+        // First function call
         public IEnumerable<Move> LegalMovesForPiece(Position pos)
         {
             if (Board.IsEmpty(pos) || Board[pos].Color != CurrentPlayer)
@@ -64,6 +65,10 @@ namespace ChessLogic
                 {
                     Result = Result.Draw(EndReason.Stalemate);
                 }
+            }
+            else if (Board.InsufficientMaterial())
+            {
+                Result = Result.Draw(EndReason.InsufficientMaterial);
             }
         }
 

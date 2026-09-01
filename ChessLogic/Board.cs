@@ -11,7 +11,6 @@ namespace ChessLogic
     {
 
         private readonly Piece[,] pieces = new Piece[8, 8];
-        // TODO: are nowday dict sill need those seter and getter or it because of the individual logic
         private readonly Dictionary<Player, Position> pawnSkipPosition = new Dictionary<Player, Position>
         {
             { Player.Black, null},
@@ -129,6 +128,64 @@ namespace ChessLogic
                 copy[pos] = this[pos].Copy();
             }
             return copy;
+        }
+
+        private Counting CountPieces()
+        {
+            Counting counting = new Counting();
+
+            foreach (Position pos in PiecePositions())
+            {
+                Piece piece = this[pos];
+                counting.IncrementCount(piece.Type, piece.Color);
+            }
+            return counting;    
+        }
+
+        public bool InsufficientMaterial()
+        {
+            Counting counting = CountPieces();
+
+
+            return false;
+        }
+
+        private static bool IsKingVSKing(Counting counting)
+        {
+            return counting.TotalCount == 2;
+        }
+
+        private static bool IsKingAndBishopVsKing(Counting counting)
+        {
+            return counting.TotalCount == 3 && (counting.White(PieceType.Bishop) == 1 || counting.Black(PieceType.Bishop) == 1);
+        }
+
+        private static bool IsKingKnightVsKing(Counting counting)
+        {
+            return counting.TotalCount == 3 && (counting.White(PieceType.Knight) == 1 || counting.Black(PieceType.Knight) == 1);
+        }
+
+        private bool IsKingAndBishopVsKingAndBishop(Counting counting)
+        {
+            if (counting.TotalCount != 4)
+            {
+                return false;
+            }
+
+            if (counting.White(PieceType.Bishop) != 1 || counting.Black(PieceType.Bishop) != 1)
+            {
+                return false;
+            }
+
+            Position wBishopPos = FindPiece(Player.White, PieceType.Bishop); 
+            Position bBishopPos = FindPiece(Player.Black, PieceType.Bishop);
+    
+            return wBishopPos.SquareColor() == bBishopPos.SquareColor();
+        }
+
+        private Position FindPiece (Player playerColor, PieceType type)
+        {
+            return PiecePositionsFor(playerColor).FirstOrDefault(pos => this[pos].Type == type);
         }
     }
 }
