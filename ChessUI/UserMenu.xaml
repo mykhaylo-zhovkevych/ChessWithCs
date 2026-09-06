@@ -1,0 +1,43 @@
+<UserControl x:Class="ChessUI.UserMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:ChessUI"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Border Width="320" Height="230" Style="{StaticResource BorderStyle}">
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Enter name" Margin="0,0,0,8"
+                       HorizontalAlignment="Left"
+                       Style="{StaticResource TextStyle}" />
+
+            <TextBox Grid.Row="1" x:Name="InputBox"
+                     Text="{Binding UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Height="30" FontSize="14" Padding="4"
+                     Background="#1e1e1e" Foreground="#ffa274"
+                     CaretBrush="#ffa274"
+                     BorderBrush="#260000" BorderThickness="2" />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                <TextBlock Text="IP Address: " Style="{StaticResource TextStyle}" />
+                <TextBlock Text="{Binding Ip}" FontWeight="Bold" Style="{StaticResource TextStyle}" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="RESET" Style="{StaticResource ButtonStyle}"
+                        Width="90" Height="32" Margin="0,0,10,0" Click="Reset_Click" />
+                <Button Content="OK" Style="{StaticResource ButtonStyle}"
+                        Width="90" Height="32" Click="Ok_Click" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

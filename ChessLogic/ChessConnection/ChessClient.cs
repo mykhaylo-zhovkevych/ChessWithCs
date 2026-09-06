@@ -25,9 +25,10 @@ namespace ChessLogic
 				?.ToString() ?? "unknown";
         }
 
+		public static void DebugPrintSubmitted(string userName, string ipAddress)
+		{
+			Console.WriteLine($"[ChessClient] submitted -> name='{userName}', ip='{ipAddress}'");
+		}
 
-
-
-		
 	}
 }
