@@ -17,6 +17,8 @@ namespace ChessUI
         private readonly Rectangle[,] highlights = new Rectangle[8, 8];
         private readonly Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
 
+        private readonly MenuController menus;
+
         private GameState gameState;
         private Position selectedPos = null;
 
@@ -24,6 +26,10 @@ namespace ChessUI
         {
             InitializeComponent();
             InitializeBoard();
+
+            menus = new MenuController(MenuContainer, RestartGame);
+            menus.ShowUserPrompt();
+
             gameState = new GameState(Player.White, Board.Initial());
             DrawBoard(gameState.Board);
             SetCursor(gameState.CurrentPlayer);
@@ -61,7 +67,7 @@ namespace ChessUI
 
         private void BoardGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (IsMenuOnScreen())
+            if (menus.IsOpen)
             {
                 return;
             }
@@ -118,7 +124,7 @@ namespace ChessUI
 
             if (gameState.IsGameOver())
             {
-                ShowGameOver();
+                menus.ShowGameOver(gameState);
             }
         }
 
@@ -128,34 +134,11 @@ namespace ChessUI
             pieceImages[fromPos.Row, fromPos.Column].Source = Images.GetImage(gameState.CurrentPlayer, PieceType.Pawn);
             pieceImages[fromPos.Row, fromPos.Column].Source = null;
 
-            PromotionMenu promMenu = new PromotionMenu(gameState.CurrentPlayer);
-            MenuContainer.Content = promMenu;
-
-            promMenu.PieceSelected += type =>
+            menus.ShowPromotion(gameState.CurrentPlayer, type =>
             {
-                MenuContainer.Content = null;
                 Move promotionMove = new PawnPromotion(fromPos, toPos, type);
                 HandleMove(promotionMove);
-            };
-        }
-
-        private void ShowGameOver()
-        {
-            GameOverMenu gameOverMenu = new GameOverMenu(gameState);
-            MenuContainer.Content = gameOverMenu;
-
-            gameOverMenu.OptionSelected += option =>
-            {
-                if (option == Option.Exit)
-                {
-                    Application.Current.Shutdown();
-                }
-                else
-                {
-                    MenuContainer.Content = null;
-                    RestartGame();
-                }
-            };
+            });
         }
 
         private void RestartGame()
@@ -216,33 +199,17 @@ namespace ChessUI
             }
         }
 
-        private bool IsMenuOnScreen()
-        {
-            return MenuContainer.Content != null;
-        }
-
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (!IsMenuOnScreen() && e.Key == Key.Escape)
+            if (menus.IsOpen)
             {
-                ShowPauseMenu();
+                return;
             }
-        }
 
-        private void ShowPauseMenu()
-        {
-            PauseMenu pauseMenu = new PauseMenu();
-            MenuContainer.Content = pauseMenu;
-
-            pauseMenu.OptionSelected += option =>
+            if (e.Key == Key.Escape)
             {
-                MenuContainer.Content = null;
-
-                if (option == Option.Restart)
-                {
-                    RestartGame();
-                }
-            };
+                menus.ShowPause();
+            }
         }
     }
 }
