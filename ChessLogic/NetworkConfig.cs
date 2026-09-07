@@ -10,6 +10,8 @@ namespace ChessLogic
     {
         public string Mode { get; set; } = "LoopbackTest";
         public string Host { get; set; } = "127.0.0.1";
+        // Address this machine hosts on / the client uses to reach its own server.
+        public string LocalIp { get; set; } = "127.0.0.1";
         public int Port { get; set; } = 5000;
 
         public static NetworkConfig Load(string path = "network.config.json")

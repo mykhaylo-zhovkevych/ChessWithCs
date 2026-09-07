@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -9,17 +9,23 @@ using ChessLogic.Enum;
 namespace ChessUI
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// This client is "dumb": it holds no GameState and enforces no rules
+    /// It renders whatever board the server sends (<see cref="ApplyState"/>)
+    /// forwards raw from/to clicks (<see cref="ChessClient.SendMove"/>).
+    /// The server validates and echoes the authoritative state back. Move
     /// </summary>
     public partial class MainWindow : Window
     {
         private readonly Image[,] pieceImages = new Image[8, 8];
         private readonly Rectangle[,] highlights = new Rectangle[8, 8];
-        private readonly Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
 
         private readonly MenuController menus;
+        private readonly ChessClient client = new ChessClient();
+        private ChessServer server;
 
-        private GameState gameState;
+        private Player myColor = Player.None;
+        private Player currentTurn = Player.White;
+        private bool gameOver;
         private Position selectedPos = null;
 
         public MainWindow()
@@ -27,12 +33,54 @@ namespace ChessUI
             InitializeComponent();
             InitializeBoard();
 
-            menus = new MenuController(MenuContainer, RestartGame);
-            menus.ShowUserPrompt();
+            menus = new MenuController(MenuContainer, () => RestartGame());
 
-            gameState = new GameState(Player.White, Board.Initial());
-            DrawBoard(gameState.Board);
-            SetCursor(gameState.CurrentPlayer);
+            client.ConnectionEstablished += payload => Dispatcher.Invoke(() =>
+            {
+                myColor = System.Enum.Parse<Player>(payload);
+                Title = $"Chess — you are {myColor}";
+            });
+
+            client.ConnectionFailed += msg => Dispatcher.Invoke(() =>
+            {
+                MessageBox.Show($"Connection failed: {msg}", "Chess");
+                ShowConnectMenu();
+            });
+
+            client.MoveRejected += msg => Dispatcher.Invoke(() =>
+            {
+                selectedPos = null;
+                Title = $"Chess — you are {myColor} — {msg}";
+            });
+            client.StateUpdated += dto => Dispatcher.Invoke(() => ApplyState(dto));
+
+            ShowConnectMenu();
+        }
+
+        private void ShowConnectMenu()
+        {
+            NetworkConfig config = NetworkConfig.Load();
+
+            menus.ShowUserPrompt(
+                client.UserName, client.LocalIp, config.Port, config.LocalIp, onHost: () =>
+                {
+                    if (server == null)
+                    {
+                        try
+                        {
+                            server = new ChessServer(config.Port);
+                            server.Start();
+                        }
+                        catch (System.Net.Sockets.SocketException ex)
+                        {
+                            server = null;
+                            MessageBox.Show($"Could not host on port {config.Port}: {ex.Message}", "Chess");
+                            ShowConnectMenu();
+                            return;
+                        }
+                    }
+                    client.Connect(config.LocalIp, config.Port);
+                }, onJoin: ip => client.Connect(ip, config.Port));
         }
 
         private void InitializeBoard()
@@ -45,7 +93,6 @@ namespace ChessUI
                     pieceImages[r, c] = image;
                     PieceGrid.Children.Add(image);
 
-                    // Create highlight rectangles and add them to the grid
                     Rectangle highlight = new Rectangle();
                     highlights[r, c] = highlight;
                     HighlightGrid.Children.Add(highlight);
@@ -53,105 +100,63 @@ namespace ChessUI
             }
         }
 
-        private void DrawBoard(Board board)
+        private void ApplyState(GameStateDto state)
         {
+            selectedPos = null;
+
             for (int r = 0; r < 8; r++)
             {
                 for (int c = 0; c < 8; c++)
                 {
-                    Piece piece = board[r, c];
-                    pieceImages[r,c].Source = Images.GetImage(piece);
+                    // e.g. "White_Pawn", or null
+                    string cell = state.Board[r][c]; 
+                    if (cell == null)
+                    {
+                        pieceImages[r, c].Source = null;
+                        continue;
+                    }
+
+                    string[] parts = cell.Split('_');
+                    Player color = System.Enum.Parse<Player>(parts[0]);
+                    PieceType type = System.Enum.Parse<PieceType>(parts[1]);
+                    pieceImages[r, c].Source = Images.GetImage(color, type);
                 }
+            }
+
+            currentTurn = System.Enum.Parse<Player>(state.CurrentPlayer);
+            SetCursor(currentTurn);
+
+            gameOver = state.IsGameOver;
+            if (gameOver)
+            {
+                string text = string.IsNullOrEmpty(state.Winner) || state.Winner == Player.None.ToString()
+                    ? $"Game over — draw ({state.Reason})"
+                    : $"Game over — {state.Winner} wins ({state.Reason})";
+                MessageBox.Show(text, "Game Over");
             }
         }
 
         private void BoardGrid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (menus.IsOpen)
-            {
-                return;
-            }
+            if (menus.IsOpen || gameOver) return;
+
+            if (myColor == Player.None) return;
+            if (currentTurn != myColor) return;
 
             Point point = e.GetPosition(BoardGrid);
-            // Helper method to convert point to Position
             Position pos = ToSquarePosition(point);
 
             if (selectedPos == null)
             {
-                OnFromPositionSelected(pos);
+                selectedPos = pos;
             }
             else
             {
-                OnToPositionSelected(pos);
+                client.SendMove(selectedPos.Row, selectedPos.Column, pos.Row, pos.Column);
+                selectedPos = null;
             }
         }
 
-
-        private void OnFromPositionSelected(Position pos)
-        {
-           IEnumerable<Move> moves = gameState.LegalMovesForPiece(pos);
-            if (moves.Any())
-            {    
-                selectedPos = pos;
-                CacheMoves(moves);
-                ShowHighlights();
-            }
-        }
-
-        private void OnToPositionSelected(Position pos)
-        {
-            selectedPos = null;
-            HideHighlights();
-
-            if (moveCache.TryGetValue(pos, out Move move))
-            {
-                if (move.Type == MoveType.PawnPromotion)
-                {
-                    HandlePromotion(move.FromPos, move.ToPos);
-                }
-                else
-                {
-                    HandleMove(move);
-                }
-            }
-        }
-
-        private void HandleMove(Move move)
-        {
-            gameState.MakeMove(move);
-            DrawBoard(gameState.Board);
-            SetCursor(gameState.CurrentPlayer);
-
-            if (gameState.IsGameOver())
-            {
-                menus.ShowGameOver(gameState);
-            }
-        }
-
-        private void HandlePromotion(Position fromPos, Position toPos)
-        {
-            // Important: In a real application, you would show a promotion dialog to the user to select the piece type.
-            pieceImages[fromPos.Row, fromPos.Column].Source = Images.GetImage(gameState.CurrentPlayer, PieceType.Pawn);
-            pieceImages[fromPos.Row, fromPos.Column].Source = null;
-
-            menus.ShowPromotion(gameState.CurrentPlayer, type =>
-            {
-                Move promotionMove = new PawnPromotion(fromPos, toPos, type);
-                HandleMove(promotionMove);
-            });
-        }
-
-        private void RestartGame()
-        {
-            selectedPos = null;
-            HideHighlights();
-            moveCache.Clear();
-            gameState = new GameState(Player.White, Board.Initial());
-            DrawBoard(gameState.Board);
-            SetCursor(gameState.CurrentPlayer);
-        }
-
-        // Convert mouse click position to board square position
         private Position ToSquarePosition(Point point)
         {
             double squareSize = BoardGrid.ActualWidth / 8;
@@ -160,51 +165,31 @@ namespace ChessUI
             return new Position(row, column);
         }
 
-        private void CacheMoves(IEnumerable<Move> moves)
+        private void RestartGame()
         {
-            moveCache.Clear();
-            foreach (Move move in moves)
-            {
-                moveCache[move.ToPos] = move;
-            }
-        }
+            myColor = Player.None;
+            currentTurn = Player.White;
+            gameOver = false;
+            selectedPos = null;
 
-        private void ShowHighlights()
-        {
-            Color color = Color.FromArgb(150, 125, 255, 125);
-
-            foreach (Position to in moveCache.Keys)
+            for (int r = 0; r < 8; r++)
             {
-                highlights[to.Row, to.Column].Fill = new SolidColorBrush(color);
+                for (int c = 0; c < 8; c++)
+                {
+                    pieceImages[r, c].Source = null;
+                }
             }
-        }
-
-        private void HideHighlights()
-        {
-            foreach (Position to in moveCache.Keys)
-            {
-                highlights[to.Row, to.Column].Fill = Brushes.Transparent;
-            }
+            ShowConnectMenu();
         }
 
         private void SetCursor(Player player)
         {
-            if (player == Player.White)
-            {
-                Cursor = ChessCursors.WhiteCursor;
-            }
-            else
-            {
-                Cursor = ChessCursors.BlackCursor;
-            }
+            Cursor = player == Player.White ? ChessCursors.WhiteCursor : ChessCursors.BlackCursor;
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (menus.IsOpen)
-            {
-                return;
-            }
+            if (menus.IsOpen) return;
 
             if (e.Key == Key.Escape)
             {

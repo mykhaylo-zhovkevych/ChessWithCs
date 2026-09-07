@@ -7,9 +7,6 @@ using ChessLogic.Enum;
 
 namespace ChessUI
 {
-    /// <summary>
-    /// Interaktionslogik für PromotionMenu.xaml
-    /// </summary>
     public partial class PromotionMenu : UserControl
     {
         public event Action<PieceType> PieceSelected;

@@ -1,45 +1,32 @@
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace ChessUI
 {
-    public partial class UserMenu : UserControl, INotifyPropertyChanged
+    public partial class UserMenu : UserControl
     {
-        public event Action<string, string> Submitted;
+        private readonly string defaultHost;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event Action<string> Submitted;
 
-        public string Ip { get; }
-
-        private string userName = "";
-        public string UserName
+        public UserMenu(string defaultHost)
         {
-            get => userName;
-            set
-            {
-                userName = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserName)));
-            }
-        }
-
-        public UserMenu(string ipAddress)
-        {
-            Ip = ipAddress;
             InitializeComponent();
-            DataContext = this;
+
+            this.defaultHost = defaultHost;
+            InputBox.Text = defaultHost;
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            UserName = "";
+            InputBox.Text = defaultHost;
             InputBox.Focus();
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            Submitted?.Invoke(UserName, Ip);
+            Submitted?.Invoke(InputBox.Text.Trim());
         }
     }
 }

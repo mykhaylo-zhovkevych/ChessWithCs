@@ -6,7 +6,8 @@ namespace ChessUI
 {
     public partial class UserPromptMenu : UserControl
     {
-        public event Action Confirmed;
+        public event Action HostSelected;
+        public event Action JoinSelected;
 
         public UserPromptMenu(string userName, string ipAddress, int port)
         {
@@ -17,9 +18,14 @@ namespace ChessUI
             PortText.Text = port.ToString();
         }
 
-        private void Yes_Click(object sender, RoutedEventArgs e)
+        private void Host_Click(object sender, RoutedEventArgs e)
         {
-            Confirmed?.Invoke();
+            HostSelected?.Invoke();
+        }
+
+        private void Join_Click(object sender, RoutedEventArgs e)
+        {
+            JoinSelected?.Invoke();
         }
     }
 }

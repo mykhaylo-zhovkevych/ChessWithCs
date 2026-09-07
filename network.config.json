@@ -1,5 +1,5 @@
 {
     "Mode": "LoopbackTest",
-    "Host": "127.0.0.1",
+    "LocalIp": "127.0.0.1",
     "Port": 5000
 }

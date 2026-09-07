@@ -26,7 +26,6 @@ namespace ChessUI
 
         public void Close() => host.Content = null;
 
-
         public void ShowPromotion(Player player, Action<PieceType> onPicked)
         {
             PromotionMenu menu = new PromotionMenu(player);
@@ -73,28 +72,35 @@ namespace ChessUI
                 }
             };
         }
-        public void ShowUserPrompt()
+  
+        public void ShowUserPrompt(string userName, string localIp, int port, string defaultJoinHost, Action onHost, Action<string> onJoin)
         {
-            ChessClient client = new ChessClient();
-
-            UserPromptMenu prompt = new UserPromptMenu(client.UserName, client.LocalIp, client.Port);
+            UserPromptMenu prompt = new UserPromptMenu(userName, localIp, port);
             host.Content = prompt;
 
-            prompt.Confirmed += () =>
+            prompt.HostSelected += () =>
             {
                 AppState.UserConfirmed = true;
-                ShowUserMenu(client.LocalIp);  
+                Close();
+                onHost();
+            };
+
+            prompt.JoinSelected += () =>
+            {
+                AppState.UserConfirmed = true;
+                ShowUserMenu(defaultJoinHost, onJoin);
             };
         }
 
-        public void ShowUserMenu(string ipAddress)
+        public void ShowUserMenu(string defaultJoinHost, Action<string> onJoin)
         {
-            UserMenu menu = new UserMenu(ipAddress);
+            UserMenu menu = new UserMenu(defaultJoinHost);
             host.Content = menu;
 
-            menu.Submitted += (userName, ip) =>
+            menu.Submitted += ip =>
             {
                 Close();
+                onJoin(ip);
             };
         }
     }

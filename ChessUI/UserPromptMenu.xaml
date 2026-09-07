@@ -40,11 +40,13 @@
             <TextBlock Grid.Row="3" Grid.Column="1" x:Name="PortText" FontWeight="Bold" Margin="0,0,0,15"
                        Style="{StaticResource TextStyle}" />
 
-            <Button Grid.Row="4" Grid.ColumnSpan="2" Content="YES"
-                    Style="{StaticResource ButtonStyle}"
-                    Width="80" Height="30"
-                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Click="Yes_Click" />
+            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="HOST" Style="{StaticResource ButtonStyle}"
+                        Width="90" Height="32" Margin="0,0,10,0" Click="Host_Click" />
+                <Button Content="JOIN" Style="{StaticResource ButtonStyle}"
+                        Width="90" Height="32" Click="Join_Click" />
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

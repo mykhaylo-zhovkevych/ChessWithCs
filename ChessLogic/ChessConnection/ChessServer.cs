@@ -49,28 +49,40 @@ namespace ChessLogic
 
         private void HandleClient(TcpClient client, Player assignedPlayer)
         {
-            
-            StreamReader reader = new StreamReader(client.GetStream());
-            
-            lock (stateLock);
-                Send(playerWriters[assignedPlayer], new NetworkMessage {  Type = "hello", Payload = assignedPlayer.ToString() });
-            BroadcastState();
+            NetworkStream stream = client.GetStream();
+            StreamReader reader = new StreamReader(stream);
+            StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
 
-            // Check if connection is established
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                NetworkMessage msg = JsonSerializer.Deserialize<NetworkMessage>(line);
-                if (msg.Type == "move")
-                {
-                    HandleMove(msg, assignedPlayer);
-                }
-            }
-            // Clean up on disconnect
             lock (stateLock)
             {
-                playerPool.Remove(assignedPlayer);
-                playerWriters.Remove(assignedPlayer);
+                playerWriters[assignedPlayer] = writer;
+                Send(writer, new NetworkMessage { Type = "hello", Payload = assignedPlayer.ToString() });
+                BroadcastStateInternal();
+            }
+
+            try
+            {
+                // Check if connection is established
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    NetworkMessage msg = JsonSerializer.Deserialize<NetworkMessage>(line);
+                    if (msg.Type == "move")
+                    {
+                        HandleMove(msg, assignedPlayer);
+                    }
+                }
+            }
+            catch (IOException) { /* client dropped */ }
+            finally
+            {
+                // Clean up on disconnect
+                lock (stateLock)
+                {
+                    playerPool.Remove(assignedPlayer);
+                    playerWriters.Remove(assignedPlayer);
+                }
+                client.Close();
             }
         }
 
@@ -83,7 +95,7 @@ namespace ChessLogic
                 // Check the steps of the game are correctly followed, game state is valid
                 if (gameState.CurrentPlayer != sender)
                 {
-                    Send(playerWriters[sender], new NetworkMessage { Type = "error", Payload = "Not your turn" });
+                    Send(playerWriters[sender], new NetworkMessage { Type = "reject", Payload = "Not your turn" });
                     return;
                 }
 
@@ -93,7 +105,7 @@ namespace ChessLogic
                 Move legalMove = gameState.LegalMovesForPiece(from).FirstOrDefault(m => m.ToPos == to);
                 if (legalMove == null)
                 {
-                    Send(playerWriters[sender], new NetworkMessage { Type = "error", Payload = "Illegal move" });
+                    Send(playerWriters[sender], new NetworkMessage { Type = "reject", Payload = "Illegal move" });
                     return;
                 }
 

@@ -2,12 +2,14 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
+using ChessLogic.Enum;
 
 namespace ChessLogic
 {
 	public class ChessClient
 	{
-		
+		public Player AssignedColor { get; private set; } = Player.None;
+
 		public string UserName { get; }
 		public string LocalIp { get; }
 		public int Port { get; private set; }
@@ -51,10 +53,10 @@ namespace ChessLogic
 				client = new TcpClient();
 				client.Connect(host, port);
 
-				var stream = client.GetStream();
+				NetworkStream stream = client.GetStream();
 				writer = new StreamWriter(stream) { AutoFlush = true };
 
-				var reader = new StreamReader(stream);
+				StreamReader reader = new StreamReader(stream);
 
 				new Thread(() => ReceiveLoop(reader)) { IsBackground = true }.Start();
             }
@@ -66,12 +68,11 @@ namespace ChessLogic
 
 		public void SendMove(int fromRow, int fromCol, int toRow, int toCol)
 		{
-            var payload = JsonSerializer.Serialize(new MoveRequestDto
+			if (writer == null) return;
+
+            string payload = JsonSerializer.Serialize(new MoveRequestDto
             {
-                FromRow = fromRow,
-                FromCol = fromCol,
-                ToRow = toRow,
-                ToCol = toCol
+                FromRow = fromRow, FromCol = fromCol, ToRow = toRow, ToCol = toCol
             });
 			writer.WriteLine(JsonSerializer.Serialize(new NetworkMessage {Type = "move", Payload = payload }));
         }
@@ -79,17 +80,24 @@ namespace ChessLogic
         // Handles incoming messages from the server and invokes the appropriate events based on the message type
         private void ReceiveLoop(StreamReader reader)
 		{
-			string line;
-			while ((line = reader.ReadLine()) != null)
+			try
 			{
-				var msg = JsonSerializer.Deserialize<NetworkMessage>(line);
-				switch (msg.Type)
+				string line;
+				while ((line = reader.ReadLine()) != null)
 				{
-					case "hello": ConnectionEstablished?.Invoke(msg.Payload); break;
-					case "state": StateUpdated?.Invoke(JsonSerializer.Deserialize<GameStateDto>(msg.Payload)); break;
-					case "reject": MoveRejected?.Invoke(msg.Payload); break;
+					NetworkMessage msg = JsonSerializer.Deserialize<NetworkMessage>(line);
+					switch (msg.Type)
+					{
+						case "hello":
+							AssignedColor = System.Enum.Parse<Player>(msg.Payload);
+							ConnectionEstablished?.Invoke(msg.Payload);
+							break;
+						case "state": StateUpdated?.Invoke(JsonSerializer.Deserialize<GameStateDto>(msg.Payload)); break;
+						case "reject": MoveRejected?.Invoke(msg.Payload); break;
+					}
 				}
 			}
+			catch (IOException) { /* connection closed */ }
 		}
 	}
 }
