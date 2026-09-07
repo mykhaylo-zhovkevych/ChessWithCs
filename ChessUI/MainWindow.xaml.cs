@@ -18,6 +18,7 @@ namespace ChessUI
     {
         private readonly Image[,] pieceImages = new Image[8, 8];
         private readonly Rectangle[,] highlights = new Rectangle[8, 8];
+        private readonly Dictionary<Position, List<Position>> moveCache = new();
 
         private readonly MenuController menus;
         private readonly ChessClient client = new ChessClient();
@@ -50,11 +51,31 @@ namespace ChessUI
             client.MoveRejected += msg => Dispatcher.Invoke(() =>
             {
                 selectedPos = null;
+                ClearHighlights();
                 Title = $"Chess — you are {myColor} — {msg}";
             });
-            client.StateUpdated += dto => Dispatcher.Invoke(() => ApplyState(dto));
 
+            client.StateUpdated += dto => Dispatcher.Invoke(() => ApplyState(dto));
             ShowConnectMenu();
+        }
+
+        private void ShowHighlights(Position from)
+        {
+            ClearHighlights();
+            if (!moveCache.TryGetValue(from, out List<Position> targets)) return;
+
+            Color color = Color.FromArgb(150, 125, 255, 125);
+            foreach (Position to in targets)
+            {
+                highlights[to.Row, to.Column].Fill = new SolidColorBrush(color);
+            }
+        }
+
+        private void ClearHighlights()
+        {
+            for (int r = 0; r < 8; r++)
+                for (int c = 0; c < 8; c++)
+                    highlights[r, c].Fill = null;
         }
 
         private void ShowConnectMenu()
@@ -103,6 +124,17 @@ namespace ChessUI
         private void ApplyState(GameStateDto state)
         {
             selectedPos = null;
+            ClearHighlights();
+
+            moveCache.Clear();
+            foreach (int[] m in state.LegalMoves ?? System.Array.Empty<int[]>())
+            {
+                Position from = new Position(m[0], m[1]);
+                Position to = new Position(m[2], m[3]);
+                if (!moveCache.TryGetValue(from, out List<Position> targets))
+                    moveCache[from] = targets = new List<Position>();
+                targets.Add(to);
+            }
 
             for (int r = 0; r < 8; r++)
             {
@@ -149,11 +181,13 @@ namespace ChessUI
             if (selectedPos == null)
             {
                 selectedPos = pos;
+                ShowHighlights(pos);
             }
             else
             {
                 client.SendMove(selectedPos.Row, selectedPos.Column, pos.Row, pos.Column);
                 selectedPos = null;
+                ClearHighlights();
             }
         }
 
@@ -171,6 +205,8 @@ namespace ChessUI
             currentTurn = Player.White;
             gameOver = false;
             selectedPos = null;
+            moveCache.Clear();
+            ClearHighlights();
 
             for (int r = 0; r < 8; r++)
             {

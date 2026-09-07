@@ -102,14 +102,14 @@ namespace ChessLogic
                 Position from = new Position(movedRequest.FromRow, movedRequest.FromCol);
                 Position to = new Position(movedRequest.ToRow, movedRequest.ToCol);
 
-                Move legalMove = gameState.LegalMovesForPiece(from).FirstOrDefault(m => m.ToPos == to);
-                if (legalMove == null)
-                {
-                    Send(playerWriters[sender], new NetworkMessage { Type = "reject", Payload = "Illegal move" });
-                    return;
-                }
+                IEnumerable<Move> legalMove = gameState.LegalMovesForPiece(from).Where(m => m.ToPos == to);
 
-                gameState.MakeMove(legalMove);
+                if (legalMove.Any())
+                {
+                    gameState.MakeMove(legalMove.FirstOrDefault());
+                }
+                
+
                 BroadcastStateInternal();
             }
         }
@@ -127,14 +127,6 @@ namespace ChessLogic
             GameStateDto dto = BuildStateDto();
             NetworkMessage msg = new NetworkMessage { Type = "state", Payload = JsonSerializer.Serialize(dto) };
 
-            //List<TcpClient> clients;
-            //lock (stateLock)
-            //    clients = playerPool.Values.ToList();
-            
-            //foreach (TcpClient c in clients)
-            //{
-            //    Send(new StreamWriter(c.GetStream()) { AutoFlush = true }, msg);
-            //}
             foreach (StreamWriter writer in playerWriters.Values)
             {
                 Send(writer, msg);
@@ -145,7 +137,7 @@ namespace ChessLogic
         private static void Send(StreamWriter writer, NetworkMessage msg) => writer.WriteLine(JsonSerializer.Serialize(msg));
         private GameStateDto BuildStateDto()
         {
-            String[][] rows = new string[8][];
+            string[][] rows = new string[8][];
             for (int r = 0; r < 8; r++)
             {
                 rows[r] = new string[8];
@@ -162,7 +154,8 @@ namespace ChessLogic
                 CurrentPlayer = gameState.CurrentPlayer.ToString(),
                 IsGameOver = over,
                 Winner = over ? gameState.Result.Winner.ToString() : null,
-                Reason = over ? gameState.Result.Reason.ToString(): null
+                Reason = over ? gameState.Result.Reason.ToString() : null,
+                LegalMoves = gameState.AllLegalMovesFor(gameState.CurrentPlayer).Select(m => new[] { m.FromPos.Row, m.FromPos.Column, m.ToPos.Row, m.ToPos.Column }).ToArray()
             };
         }
     }
@@ -176,8 +169,10 @@ namespace ChessLogic
     { 
         public int FromRow { get; set; } public int FromCol { get; set; } public int ToRow { get; set; } public int ToCol { get; set; } 
     }
-    public class GameStateDto 
-    { 
-        public string[][] Board { get; set; } public string CurrentPlayer { get; set; } public bool IsGameOver { get; set; } public string Winner { get; set; } public string Reason { get; set; } 
+    public class GameStateDto
+    {
+        public string[][] Board { get; set; } public string CurrentPlayer { get; set; } public bool IsGameOver { get; set; } public string Winner { get; set; } public string Reason { get; set; }
+        // The client filters these by the square it selected and paints highlights
+        public int[][] LegalMoves { get; set; }
     }
 }

@@ -8,8 +8,6 @@ namespace ChessLogic
 {
 	public class ChessClient
 	{
-		public Player AssignedColor { get; private set; } = Player.None;
-
 		public string UserName { get; }
 		public string LocalIp { get; }
 		public int Port { get; private set; }
@@ -74,7 +72,7 @@ namespace ChessLogic
             {
                 FromRow = fromRow, FromCol = fromCol, ToRow = toRow, ToCol = toCol
             });
-			writer.WriteLine(JsonSerializer.Serialize(new NetworkMessage {Type = "move", Payload = payload }));
+			writer.WriteLine(JsonSerializer.Serialize(new NetworkMessage { Type = "move", Payload = payload }));
         }
 
         // Handles incoming messages from the server and invokes the appropriate events based on the message type
@@ -88,12 +86,9 @@ namespace ChessLogic
 					NetworkMessage msg = JsonSerializer.Deserialize<NetworkMessage>(line);
 					switch (msg.Type)
 					{
-						case "hello":
-							AssignedColor = System.Enum.Parse<Player>(msg.Payload);
-							ConnectionEstablished?.Invoke(msg.Payload);
-							break;
+						case "hello": ConnectionEstablished?.Invoke(msg.Payload); break;
 						case "state": StateUpdated?.Invoke(JsonSerializer.Deserialize<GameStateDto>(msg.Payload)); break;
-						case "reject": MoveRejected?.Invoke(msg.Payload); break;
+						//case "reject": MoveRejected?.Invoke(msg.Payload); break;
 					}
 				}
 			}
