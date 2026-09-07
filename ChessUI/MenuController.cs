@@ -77,13 +77,12 @@ namespace ChessUI
         {
             ChessClient client = new ChessClient();
 
-            UserPromptMenu prompt = new UserPromptMenu(client.UserName, client.LocalIp);
+            UserPromptMenu prompt = new UserPromptMenu(client.UserName, client.LocalIp, client.Port);
             host.Content = prompt;
 
             prompt.Confirmed += () =>
             {
                 AppState.UserConfirmed = true;
-                // step 2 of the startup sequence
                 ShowUserMenu(client.LocalIp);  
             };
         }
@@ -95,7 +94,6 @@ namespace ChessUI
 
             menu.Submitted += (userName, ip) =>
             {
-                ChessClient.DebugPrintSubmitted(userName, ip);
                 Close();
             };
         }
